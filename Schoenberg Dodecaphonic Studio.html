@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MODUS XII — Schoenberg Dodecaphonic Composition Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            obsidian: {
+              950: '#07090e',
+              900: '#0c1018',
+              850: '#111722',
+              800: '#161e2e',
+              700: '#1f293d',
+            },
+            viennese: {
+              gold: '#f59e0b',
+              cyan: '#38bdf8',
+              coral: '#fb7185',
+              emerald: '#34d399',
+              violet: '#a78bfa',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbars & Viennese Studio Aesthetics */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c1018;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f293d;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    .matrix-cell {
+      transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .matrix-cell:hover {
+      transform: scale(1.08);
+      z-index: 10;
+    }
+
+    /* Hexachordal Partition Divider in 12x12 Matrix */
+    .hex-border-right {
+      border-right: 2px dashed rgba(245, 158, 11, 0.45) !important;
+    }
+    .hex-border-bottom {
+      border-bottom: 2px dashed rgba(245, 158, 11, 0.45) !important;
+    }
+
+    /* Subtle grid background */
+    .studio-grid-bg {
+      background-image: 
+        linear-gradient(to right, rgba(30, 41, 59, 0.22) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.22) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 0 12px 2px rgba(245, 158, 11, 0.65); }
+    }
+    .active-aggregate-led {
+      animation: pulseGlow 1.5s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+
+  <!-- TOP NAVIGATION & TRANSPORT HEADER -->
+  <header class="sticky top-0 z-30 bg-obsidian-900/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-2.5">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-sky-500/20 border border-amber-500/40 flex items-center justify-center shadow-inner">
+          <span class="font-display font-bold text-amber-400 text-sm tracking-tighter">XII</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-display font-bold text-base sm:text-lg tracking-tight text-white">MODUS XII</h1>
+            <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              Schoenberg Mature Practice Engine
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">
+            Hexachordal Inversional Combinatoriality • Aggregate Counterpoint • Isomorphic &amp; Multidimensional Partitioning
+          </p>
+        </div>
+      </div>
+
+      <!-- Master Transport & Audio Controls -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <!-- Play / Pause / Stop / Loop -->
+        <div class="flex items-center bg-obsidian-950 p-1 rounded-lg border border-slate-800">
+          <button id="btnPlay" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-semibold text-xs transition shadow">
+            <svg id="iconPlay" class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <span id="labelPlay">Play Score</span>
+          </button>
+          <button id="btnStop" class="px-2.5 py-1.5 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/70 text-xs font-medium transition" title="Stop and Reset Playhead">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+          </button>
+          <button id="btnLoop" class="px-2.5 py-1.5 rounded-md text-amber-400 bg-amber-500/10 border border-amber-500/30 text-xs font-mono transition" title="Toggle Loop Playback">
+            LOOP
+          </button>
+        </div>
+
+        <!-- Regenerate Composition -->
+        <button id="btnRegenerate" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-medium transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>Synthesize Piece</span>
+        </button>
+
+        <!-- Tempo Control -->
+        <div class="flex items-center gap-2 bg-obsidian-950 px-2.5 py-1 rounded-lg border border-slate-800">
+          <span class="text-[10px] font-mono text-slate-400 uppercase">BPM</span>
+          <input id="sliderTempo" type="range" min="48" max="144" value="84" class="w-16 sm:w-20 accent-amber-500 cursor-pointer h-1 bg-slate-800 rounded-lg" />
+          <span id="valTempo" class="text-xs font-mono text-amber-300 w-7 text-right">84</span>
+        </div>
+
+        <!-- Ensemble Timbre -->
+        <select id="selectTimbre" class="bg-obsidian-950 text-xs text-slate-200 border border-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500">
+          <option value="quartet">Viennese String Quartet</option>
+          <option value="piano">Solo Klavierstück (Op. 33)</option>
+          <option value="winds">Chamber Woodwind Quintet</option>
+          <option value="synth">Moderne Polyphonic Synth</option>
+        </select>
+
+        <!-- Export MIDI & JSON -->
+        <div class="flex items-center gap-1.5">
+          <button id="btnExportMidi" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-mono transition flex items-center gap-1" title="Download Multi-Track Standard MIDI File (.mid)">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
+            <span>.MID</span>
+          </button>
+          <button id="btnCopyJson" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-mono transition" title="Copy Analytical Score JSON to Clipboard">
+            JSON
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- STATUS NOTIFICATION BANNER (NON-MODAL TOAST) -->
+  <div id="toastBanner" class="fixed bottom-4 right-4 z-50 hidden transform transition-all duration-200 bg-obsidian-800 border border-amber-500/50 text-slate-100 px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs">
+    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+    <span id="toastMessage">Ready</span>
+  </div>
+
+  <!-- MAIN WORKSPACE GRID -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+    <!-- LEFT COLUMN (4 COLS): ROW WORKBENCH & INTERACTIVE 12x12 MATRIX -->
+    <section class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
+      
+      <!-- MODULE 1: COMBINATORIAL ROW WORKBENCH -->
+      <div class="bg-obsidian-900 border border-slate-800/90 rounded-xl p-4 shadow-lg">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400 block">Feature 1 &amp; 2 • Referential Set</span>
+            <h2 class="font-display font-semibold text-sm sm:text-base text-white">Combinatorial Row Workbench</h2>
+          </div>
+          <span id="badgeCombinatorial" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            6+6 I-Combinatorial
+          </span>
+        </div>
+
+        <!-- Authentic Schoenberg Row Presets -->
+        <div class="mb-3">
+          <label class="block text-[11px] text-slate-400 mb-1 font-medium">Authentic Schoenberg &amp; Custom Referential Sets</label>
+          <div class="flex gap-2">
+            <select id="selectPreset" class="flex-1 bg-obsidian-950 text-xs text-slate-200 border border-slate-800 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500">
+              <option value="op31">Schoenberg: Variations for Orchestra, Op. 31 (1928)</option>
+              <option value="op33a">Schoenberg: Klavierstück, Op. 33a (1929)</option>
+              <option value="op37">Schoenberg: Fourth String Quartet, Op. 37 (1936)</option>
+              <option value="op36">Schoenberg: Violin Concerto, Op. 36 (1936)</option>
+              <option value="moses">Schoenberg: Moses und Aron (1932)</option>
+              <option value="webern24">Webern: Concerto for Nine Instruments, Op. 24 (Trichordal)</option>
+            </select>
+            <button id="btnRandomCombinatorial" class="px-3 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-mono whitespace-nowrap transition" title="Generate a new guaranteed Hexachordally Combinatorial 12-tone row">
+              New I-Comb Row
+            </button>
+          </div>
+        </div>
+
+        <!-- Active P0 & Paired In Display -->
+        <div class="space-y-2 bg-obsidian-950 p-2.5 rounded-lg border border-slate-800/80 mb-3">
+          <!-- Prime Row P -->
+          <div>
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <span class="font-mono text-amber-400 font-semibold" id="labelActivePrime">Prime Row (P10) — Hauptstimme Basis</span>
+              <button id="btnAuditionPrime" class="text-[10px] font-mono text-amber-300 hover:underline flex items-center gap-1">
+                ▶ Audition P
+              </button>
+            </div>
+            <div id="stripPrimeRow" class="grid grid-cols-12 gap-1"></div>
+          </div>
+
+          <!-- Paired Combinatorial Inversion In -->
+          <div class="pt-1.5 border-t border-slate-800/70">
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <span class="font-mono text-sky-400 font-semibold" id="labelActiveInv">Combinatorial Partner (I7) — Aggregate Complement</span>
+              <button id="btnAuditionInv" class="text-[10px] font-mono text-sky-300 hover:underline flex items-center gap-1">
+                ▶ Audition I
+              </button>
+            </div>
+            <div id="stripInvRow" class="grid grid-cols-12 gap-1"></div>
+          </div>
+        </div>
+
+        <!-- Custom Hexachord Builder / Interactive 12-Pitch Selector -->
+        <div class="border-t border-slate-800/80 pt-2.5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] text-slate-400 font-medium">Custom Combinatorial Hexachord Builder (Click 6 Notes)</span>
+            <button id="btnResetBuilder" class="text-[10px] font-mono text-slate-400 hover:text-white">Clear (0/6)</button>
+          </div>
+          <div id="customPitchKeyboard" class="grid grid-cols-12 gap-1"></div>
+          <p id="builderHint" class="text-[10px] text-slate-400 mt-1.5 font-mono">
+            Select 6 distinct pitch classes for Hexachord A; engine auto-synthesizes its inversional complement Hexachord B.
+          </p>
+        </div>
+      </div>
+
+      <!-- MODULE 2: 12x12 MATRIX & INVARIANT SUBSET EXPLORER -->
+      <div class="bg-obsidian-900 border border-slate-800/90 rounded-xl p-4 shadow-lg flex-1 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-sky-400 block">Feature 6 &amp; 7 • Babbitt/Schoenberg Grid</span>
+            <h2 class="font-display font-semibold text-sm sm:text-base text-white">12×12 Matrix &amp; Invariant Explorer</h2>
+          </div>
+          <!-- Matrix Display Toggles -->
+          <div class="flex items-center gap-1 bg-obsidian-950 p-1 rounded-lg border border-slate-800">
+            <button id="btnModeNote" class="px-2 py-1 rounded text-[10px] font-mono bg-amber-500 text-obsidian-950 font-semibold transition">
+              C/C#
+            </button>
+            <button id="btnModeInt" class="px-2 py-1 rounded text-[10px] font-mono text-slate-400 hover:text-white transition">
+              0–11
+            </button>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-slate-400 mb-2.5">
+          Click any <span class="text-amber-300 font-mono">P</span>, <span class="text-sky-300 font-mono">I</span>, <span class="text-emerald-300 font-mono">R</span>, or <span class="text-rose-300 font-mono">RI</span> header to audition that row and highlight <span class="text-rose-300 font-semibold">Invariant Dyads/Trichords</span> shared with the active referential set.
+        </p>
+
+        <!-- 12x12 Matrix Container -->
+        <div class="overflow-x-auto pb-1">
+          <div id="matrixGrid" class="min-w-[340px] select-none"></div>
+        </div>
+
+        <!-- Matrix Legend & Invariant Inspector -->
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-col gap-2 text-[11px]">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-amber-500/30 border border-amber-400 inline-block"></span>
+                Active Area
+              </span>
+              <span class="flex items-center gap-1 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-rose-500/35 border border-rose-400 inline-block"></span>
+                Shared Invariant
+              </span>
+              <span class="flex items-center gap-1 text-slate-400">
+                <span class="w-3 border-b-2 border-dashed border-amber-500/70 inline-block"></span>
+                6+6 Split
+              </span>
+            </div>
+            <span id="matrixSelectedLabel" class="font-mono text-xs text-rose-300">Hover/Click Row Form</span>
+          </div>
+          <div id="invariantReadout" class="bg-obsidian-950 rounded-lg p-2 border border-slate-800/80 font-mono text-[11px] text-slate-300">
+            Select any row header in the 12×12 matrix to inspect preserved pitch-class segments and invariant pivot notes.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN (8 COLS): MACRO-FORM SEQUENCER, SCORE VISUALIZER & 10-FEATURE TELEMETRY -->
+    <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+
+      <!-- MODULE 3: SCHOENBERG MATURE PRACTICE CONTROLS (MACRO-FORM & PARTITIONING) -->
+      <div class="bg-obsidian-900 border border-slate-800/90 rounded-xl p-4 shadow-lg">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 block">Features 3, 4, 5, 7, 8, 9, 10 • Compositional Architecture</span>
+            <h2 class="font-display font-semibold text-sm sm:text-base text-white">Hexachordal Levels (Macro-Form) &amp; Partitioning Sequencer</h2>
+          </div>
+
+          <!-- Pitch-Relational Metre & Invariant Register Lock Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-obsidian-950 px-2.5 py-1 rounded-lg border border-slate-800">
+              <span class="text-[10px] font-mono text-slate-400">Metre:</span>
+              <select id="selectMetreMode" class="bg-transparent text-xs text-amber-300 font-mono focus:outline-none">
+                <option value="pitch_relational">Pitch-Relational (Invariant Accents)</option>
+                <option value="Viennese_waltz">Viennese 3/4 Developing Variation</option>
+                <option value="pointillist">Webernian Pointillist Symmetry</option>
+              </select>
+            </div>
+
+            <label class="flex items-center gap-1.5 bg-obsidian-950 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer text-xs text-slate-300">
+              <input id="chkFreezeInvariants" type="checkbox" checked class="accent-rose-500 rounded" />
+              <span class="text-[11px] font-mono">Freeze Invariant Registers</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4-Part Formal Roadmap Cards -->
+        <div id="formalSectionsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- MODULE 4: ANALYTICAL SCORE & AGGREGATE PIANO-ROLL VISUALIZER -->
+      <div class="bg-obsidian-900 border border-slate-800/90 rounded-xl p-4 shadow-lg flex-1 flex flex-col min-h-[420px]">
+        <!-- Visualizer Header & Voice Legend -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400">Real-Time Analytical Engraving</span>
+              <span id="liveSectionBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                I. Exposition • Area A0
+              </span>
+            </div>
+            <h2 class="font-display font-semibold text-sm sm:text-base text-white">Multidimensional Score &amp; Aggregate Timeline</h2>
+          </div>
+
+          <!-- Schoenberg Voice Symbols Legend -->
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+            <span class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono">
+              <strong class="font-bold">H</strong> Hauptstimme (Primary)
+            </span>
+            <span class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300 font-mono">
+              <strong class="font-bold">N</strong> Nebenstimme (Counter)
+            </span>
+            <span class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/30 text-violet-300 font-mono">
+              <strong>Acc</strong> Set-Derived Harmony
+            </span>
+            <span class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/40 text-rose-300 font-mono">
+              ★ Invariant Pivot
+            </span>
+          </div>
+        </div>
+
+        <!-- Interactive Canvas Container -->
+        <div class="relative flex-1 min-h-[290px] sm:min-h-[330px] bg-obsidian-950 rounded-xl border border-slate-800 overflow-hidden studio-grid-bg">
+          <canvas id="scoreCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+          <!-- Overlay Playhead Time & Aggregate Counter -->
+          <div class="absolute top-2.5 right-3 flex items-center gap-2 pointer-events-none">
+            <div class="bg-obsidian-900/90 backdrop-blur px-2.5 py-1 rounded-md border border-slate-800 text-[11px] font-mono text-slate-300">
+              Beat: <span id="readoutBeat" class="text-amber-400 font-semibold">1.0</span> / <span id="readoutTotalBeats">64</span>
+            </div>
+            <div class="bg-obsidian-900/90 backdrop-blur px-2.5 py-1 rounded-md border border-slate-800 text-[11px] font-mono text-emerald-300">
+              Aggregate: <span id="readoutAggregateIdx" class="font-semibold">#1</span>
+            </div>
+          </div>
+
+          <!-- Bottom Scrub Hint -->
+          <div class="absolute bottom-2 right-3 pointer-events-none text-[10px] font-mono text-slate-400 bg-obsidian-900/80 px-2 py-0.5 rounded">
+            Click anywhere on canvas to scrub &amp; audition measure
+          </div>
+        </div>
+
+        <!-- LIVE 12-TONE AGGREGATE COMPLETION TRACKER & INTERVAL VECTOR BAR -->
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 bg-obsidian-950 p-3 rounded-xl border border-slate-800/90">
+          <!-- 12 Pitch-Class Chromatic Aggregate LEDs -->
+          <div class="md:col-span-7 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                Real-Time 12-Tone Aggregate Completion Monitor
+              </span>
+              <span id="aggregateCountBadge" class="text-[10px] font-mono text-emerald-400">12 / 12 Pitch Classes</span>
+            </div>
+            <div id="aggregateLeds" class="grid grid-cols-12 gap-1">
+              <!-- 12 LEDs populated by JS -->
+            </div>
+          </div>
+
+          <!-- Set-Derived Harmony & Interval-Class Vector -->
+          <div class="md:col-span-5 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-800/80 pt-2 md:pt-0 md:pl-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Hexachord Interval Vector</span>
+              <span id="icVectorBadge" class="text-xs font-mono text-amber-300 font-semibold">[3, 2, 3, 2, 3, 2]</span>
+            </div>
+            <div id="activeEventAnalyticalText" class="text-[11px] font-mono text-slate-300 mt-1 truncate">
+              Ready — Click "Play Score" to hear Schoenberg combinatorial counterpoint.
+            </div>
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-1">
+              <span id="activeRowPairReadout">Pair: P10 + I7</span>
+              <span id="activePartitionReadout">Mode: Linear Hauptstimme</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE 5: LIVE SCHOENBERG 10-FEATURE ANALYTICAL TELEMETRY -->
+      <div class="bg-obsidian-900 border border-slate-800/90 rounded-xl p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-2.5">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-violet-400 block">Interactive Musicological Telemetry</span>
+            <h2 class="font-display font-semibold text-sm sm:text-base text-white">Schoenberg's 10 Mature Practice Features — Live Status</h2>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400 hidden sm:inline">Highlights active compositional rules in real time</span>
+        </div>
+
+        <div id="tenFeaturesGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
+          <!-- 10 cards dynamically rendered and highlighted during playback -->
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    /***************************************************************************
+     * MODUS XII — SCHOENBERG DODECAPHONIC COMPOSITION STUDIO ENGINE
+     * Complete client-side implementation of Arnold Schoenberg's 10 features
+     * of mature twelve-tone practice with bitwise set theory, 12x12 matrix
+     * invariant analysis, multidimensional partitioning, and Web Audio synthesis.
+     ***************************************************************************/
+
+    const NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+    // Authentic Schoenberg & Second Viennese School Combinatorial Presets
+    const ROW_PRESETS = {
+      op31: {
+        name: 'Variations for Orchestra, Op. 31 (1928)',
+        row: [10, 4, 6, 3, 5, 9, 2, 1, 7, 8, 11, 0],
+        description: 'Classic semi-combinatorial hexachordal row (Bb–E–F#–Eb–F–A | D–C#–G–Ab–B–C) paired with I at the lower minor third.'
+      },
+      op33a: {
+        name: 'Klavierstück, Op. 33a (1929)',
+        row: [10, 5, 0, 11, 9, 6, 1, 3, 7, 8, 2, 4],
+        description: 'Opens with two tetrachordal chords built from combinatorial hexachords paired with I at the lower fifth.'
+      },
+      op37: {
+        name: 'Fourth String Quartet, Op. 37 (1936)',
+        row: [2, 1, 9, 10, 5, 3, 4, 0, 8, 7, 6, 11],
+        description: 'Archetypal mature chamber row (D–C#–A–Bb–F–Eb | E–C–Ab–G–F#–B) with rich trichordal & hexachordal invariants.'
+      },
+      op36: {
+        name: 'Violin Concerto, Op. 36 (1936)',
+        row: [9, 10, 3, 11, 4, 6, 0, 1, 7, 8, 2, 5],
+        description: 'Virtuosic multidimensional row pairing solo violin linear statements with orchestral partitioned hexachords.'
+      },
+      moses: {
+        name: 'Moses und Aron (1932)',
+        row: [9, 10, 4, 2, 3, 1, 7, 5, 6, 8, 11, 0],
+        description: 'All-combinatorial symmetrical hexachordal structure rich in chromatic and whole-tone invariant subsets.'
+      },
+      webern24: {
+        name: 'Webern: Concerto, Op. 24 (Derived Trichords)',
+        row: [11, 10, 2, 3, 7, 6, 8, 4, 5, 0, 1, 9],
+        description: 'Isomorphically partitioned row composed of four retrogradable/invertible [0,1,4] trichords.'
+      }
+    };
+
+    // The 10 Features of Schoenberg's Mature Practice (for live telemetry)
+    const TEN_FEATURES_INFO = [
+      { id: 'combinatoriality', num: '01', title: 'I-Combinatoriality', desc: 'H1(P) + H1(In) = 12-tone aggregate with 0 pitch overlap.' },
+      { id: 'aggregates',       num: '02', title: 'Aggregates',         desc: '6+6 contrapuntal blocks complete all 12 pitch classes every half-row.' },
+      { id: 'linear',           num: '03', title: 'Linear Set (H)',     desc: 'Uninterrupted 12-note horizontal row statements in Hauptstimme.' },
+      { id: 'partitioning',     num: '04', title: 'Partitioning',       desc: 'Slicing rows into dyads, trichords & tetrachords across voices.' },
+      { id: 'isomorphic',       num: '05', title: 'Isomorphic Sieves',  desc: 'Order-index masks ({0,4,8}, {1,5,9}) create symmetrical motifs.' },
+      { id: 'invariants',       num: '06', title: 'Invariants',         desc: 'Preserved dyads/trichords act as harmonic pivots between rows.' },
+      { id: 'hex_levels',       num: '07', title: 'Hexachordal Levels', desc: 'Macro-form governed by transposition areas (A0 → Ax → A0).' },
+      { id: 'set_harmony',      num: '08', title: 'Set-Derived Harmony',desc: 'Vertical chords mirror the referential set interval vector.' },
+      { id: 'pitch_metre',      num: '09', title: 'Pitch-Rel. Metre',   desc: 'Downbeats and agogic accents align with invariant pivots.' },
+      { id: 'multidim',         num: '10', title: 'Multidimensional',   desc: 'Single row unfolds simultaneously across melody and harmony.' }
+    ];
+
+    // Application State
+    const state = {
+      primeRow: [...ROW_PRESETS.op31.row],
+      matrixNotation: 'note', // 'note' | 'int'
+      combinatorialPartnerRow: [],
+      combinatorialIndex: 7, // Starting pitch class of paired inversion
+      inversionMapSum: 5,    // n such that (n - x) mod 12 maps H1(P) -> H2(P)
+      matrix: null,          // Full 12x12 matrix object
+      selectedMatrixForm: { type: 'I', index: 7, row: [] },
+      invariantPositions: new Set(), // Order positions in selected row that form invariants with P
+      customHexSelection: [],
+
+      // Macro-form 4 sections
+      sections: [
+        { id: 0, name: 'I. Exposition',    areaOffset: 0, mode: 'linear',           measures: 4 },
+        { id: 1, name: 'II. Episode',      areaOffset: 5, mode: 'partitioned',      measures: 4 },
+        { id: 2, name: 'III. Development', areaOffset: 7, mode: 'isomorphic',       measures: 4 },
+        { id: 3, name: 'IV. Recapitulation',areaOffset:0, mode: 'multidimensional', measures: 4 }
+      ],
+
+      metreMode: 'pitch_relational',
+      freezeInvariants: true,
+      tempo: 84,
+      timbre: 'quartet',
+      loop: true,
+
+      // Generated Score Data
+      scoreEvents: [],       // Array of { id, pitch, pc, octave, startBeat, duration, voice, orderIdx, rowLabel, sectionIdx, aggregateIdx, isInvariant }
+      aggregates: [],        // Array of { index, startBeat, endBeat, sectionIdx, rowA, rowB }
+      totalBeats: 64,
+
+      // Transport State
+      isPlaying: false,
+      currentBeat: 0,
+      lastFrameTime: 0,
+      triggeredEventIds: new Set()
+    };
+
+    /***************************************************************************
+     * 1. BITWISE SET-THEORY & COMBINATORIALITY ENGINE
+     ***************************************************************************/
+
+    /**
+     * Converts an array of pitch classes (0-11) into a 12-bit integer mask.
+     */
+    function toBitmask(pcs) {
+      let mask = 0;
+      for (const pc of pcs) {
+        mask |= (1 << ((pc % 12 + 12) % 12));
+      }
+      return mask;
+    }
+
+    /**
+     * Finds the inversion sum `s` (where I(x) = (s - x) mod 12) such that
+     * the first hexachord of `row` maps to the second hexachord of `row` (0 overlap).
+     */
+    function findCombinatorialInversion(row) {
+      const h1 = row.slice(0, 6);
+      const maskH1 = toBitmask(h1);
+
+      for (let s = 0; s < 12; s++) {
+        const invH1 = h1.map(pc => (s - pc + 12) % 12);
+        const maskInvH1 = toBitmask(invH1);
+        if ((maskH1 & maskInvH1) === 0 && (maskH1 | maskInvH1) === 0xFFF) {
+          const fullInvRow = row.map(pc => (s - pc + 12) % 12);
+          return {
+            isCombinatorial: true,
+            sumIndex: s,
+            startPc: fullInvRow[0],
+            invRow: fullInvRow
+          };
+        }
+      }
+
+      // Fallback if user-supplied custom hexachord isn't self-combinatorial under I:
+      // pick the transposition sum that minimizes pitch overlap
+      let bestS = 0;
+      let minOverlap = 7;
+      for (let s = 0; s < 12; s++) {
+        const invH1 = h1.map(pc => (s - pc + 12) % 12);
+        const overlap = countBits(maskH1 & toBitmask(invH1));
+        if (overlap < minOverlap) {
+          minOverlap = overlap;
+          bestS = s;
+        }
+      }
+      const fullInvRow = row.map(pc => (bestS - pc + 12) % 12);
+      return {
+        isCombinatorial: minOverlap === 0,
+        sumIndex: bestS,
+        startPc: fullInvRow[0],
+        invRow: fullInvRow
+      };
+    }
+
+    function countBits(n) {
+      let count = 0;
+      while (n) {
+        count += n & 1;
+        n >>= 1;
+      }
+      return count;
+    }
+
+    /**
+     * Synthesizes a guaranteed Hexachordally Inversionally Combinatorial 12-tone row.
+     * It picks a combinatorial first hexachord H1 and builds H2 as an inverted/permuted complement.
+     */
+    function generateCombinatorialRow(seedHex = null) {
+      // Known all-combinatorial and I-combinatorial hexachord archetypes (Forte 6-1, 6-8, 6-20, 6-32, 6-Z17, etc.)
+      const archetypes = [
+        [0, 1, 2, 3, 4, 5],     // 6-1 Chromatic
+        [0, 2, 3, 4, 5, 7],     // 6-8
+        [0, 1, 4, 5, 8, 9],     // 6-20 Hexatonic
+        [0, 2, 4, 5, 7, 9],     // 6-32 Diatonic
+        [0, 1, 2, 4, 7, 8],     // 6-Z17
+        [0, 1, 3, 4, 6, 9],     // 6-27
+        [0, 1, 2, 5, 7, 8]      // 6-18
+      ];
+
+      let h1;
+      if (seedHex && seedHex.length === 6) {
+        h1 = [...seedHex];
+      } else {
+        const base = archetypes[Math.floor(Math.random() * archetypes.length)];
+        const transpose = Math.floor(Math.random() * 12);
+        h1 = shuffleArray(base.map(x => (x + transpose) % 12));
+      }
+
+      const maskH1 = toBitmask(h1);
+      // Check if there is an inversion sum `s` that maps H1 to its complement
+      let validS = [];
+      for (let s = 0; s < 12; s++) {
+        const invMask = toBitmask(h1.map(x => (s - x + 12) % 12));
+        if ((maskH1 & invMask) === 0) {
+          validS.push(s);
+        }
+      }
+
+      let h2 = [];
+      if (validS.length > 0) {
+        const s = validS[Math.floor(Math.random() * validS.length)];
+        h2 = shuffleArray(h1.map(x => (s - x + 12) % 12));
+      } else {
+        // Complement pitch classes
+        const comp = [];
+        for (let pc = 0; pc < 12; pc++) {
+          if (!h1.includes(pc)) comp.push(pc);
+        }
+        h2 = shuffleArray(comp);
+      }
+
+      return [...h1, ...h2];
+    }
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    /**
+     * Builds the full 12x12 Babbitt/Schoenberg matrix from `primeRow`.
+     */
+    function buildTwelveToneMatrix(primeRow) {
+      const p0Start = primeRow[0];
+      // Intervals of primeRow relative to its starting pitch
+      const primeIntervals = primeRow.map(pc => (pc - p0Start + 12) % 12);
+      // First column is the inversion starting on primeRow[0]
+      const col0 = primeIntervals.map(intv => (p0Start - intv + 12) % 12);
+
+      const grid = [];
+      const rowLabelsP = [];
+      const rowLabelsR = [];
+      const colLabelsI = [];
+      const colLabelsRI = [];
+
+      for (let r = 0; r < 12; r++) {
+        const rowStartPc = col0[r];
+        rowLabelsP.push(`P${rowStartPc}`);
+        rowLabelsR.push(`R${rowStartPc}`);
+        const rowPcs = primeIntervals.map(intv => (rowStartPc + intv) % 12);
+        grid.push(rowPcs);
+      }
+
+      for (let c = 0; c < 12; c++) {
+        const colStartPc = grid[0][c];
+        colLabelsI.push(`I${colStartPc}`);
+        colLabelsRI.push(`RI${colStartPc}`);
+      }
+
+      return {
+        grid,
+        rowLabelsP,
+        rowLabelsR,
+        colLabelsI,
+        colLabelsRI
+      };
+    }
+
+    /**
+     * Extracts any of the 48 row forms from the matrix by type ('P','I','R','RI') and starting/index pc.
+     */
+    function getRowFormFromMatrix(matrix, type, indexPc) {
+      if (type === 'P' || type === 'R') {
+        const rIdx = matrix.grid.findIndex(r => r[0] === indexPc);
+        if (rIdx === -1) return [...matrix.grid[0]];
+        const row = [...matrix.grid[rIdx]];
+        return type === 'R' ? row.reverse() : row;
+      } else {
+        const cIdx = matrix.grid[0].findIndex(pc => pc === indexPc);
+        const col = matrix.grid.map(r => r[cIdx === -1 ? 0 : cIdx]);
+        return type === 'RI' ? col.reverse() : col;
+      }
+    }
+
+    /**
+     * Computes shared Invariant Dyads and Trichords (unordered adjacent pitch-class sets)
+     * between `baseRow` and `targetRow`.
+     */
+    function analyzeRowInvariants(baseRow, targetRow) {
+      const baseDyads = [];
+      for (let i = 0; i < 11; i++) {
+        baseDyads.push(toBitmask([baseRow[i], baseRow[i + 1]]));
+      }
+      const baseTrichords = [];
+      for (let i = 0; i < 10; i++) {
+        baseTrichords.push(toBitmask([baseRow[i], baseRow[i + 1], baseRow[i + 2]]));
+      }
+
+      const matchedOrderIndices = new Set();
+      const sharedDyadNames = [];
+      const sharedTrichordNames = [];
+
+      // Check adjacent dyads in targetRow
+      for (let i = 0; i < 11; i++) {
+        const mask = toBitmask([targetRow[i], targetRow[i + 1]]);
+        if (baseDyads.includes(mask)) {
+          matchedOrderIndices.add(i);
+          matchedOrderIndices.add(i + 1);
+          sharedDyadNames.push(`{${NOTE_NAMES[targetRow[i]]},${NOTE_NAMES[targetRow[i + 1]]}}`);
+        }
+      }
+
+      // Check adjacent trichords in targetRow
+      for (let i = 0; i < 10; i++) {
+        const mask = toBitmask([targetRow[i], targetRow[i + 1], targetRow[i + 2]]);
+        if (baseTrichords.includes(mask)) {
+          matchedOrderIndices.add(i);
+          matchedOrderIndices.add(i + 1);
+          matchedOrderIndices.add(i + 2);
+          sharedTrichordNames.push(`{${NOTE_NAMES[targetRow[i]]},${NOTE_NAMES[targetRow[i + 1]]},${NOTE_NAMES[targetRow[i + 2]]}}`);
+        }
+      }
+
+      // Also check hexachordal identity (whether first 6 notes of targetRow have same pitch content as H1 or H2 of baseRow)
+      const baseH1Mask = toBitmask(baseRow.slice(0, 6));
+      const baseH2Mask = toBitmask(baseRow.slice(6, 12));
+      const targetH1Mask = toBitmask(targetRow.slice(0, 6));
+
+      let hexRelation = 'Distinct Hexachordal Area';
+      if (targetH1Mask === baseH1Mask) {
+        hexRelation = 'Same Hexachordal Content (H1 = H1)';
+      } else if (targetH1Mask === baseH2Mask) {
+        hexRelation = 'Combinatorial Complement (H1 = H2 → Aggregate Pair!)';
+      }
+
+      return {
+        matchedOrderIndices,
+        sharedDyadNames: [...new Set(sharedDyadNames)],
+        sharedTrichordNames: [...new Set(sharedTrichordNames)],
+        hexRelation
+      };
+    }
+
+    /**
+     * Computes the 6-element Interval-Class Vector [ic1..ic6] of a 6-note hexachord.
+     */
+    function computeIntervalVector(hexachord) {
+      const vec = [0, 0, 0, 0, 0, 0];
+      for (let i = 0; i < hexachord.length; i++) {
+        for (let j = i + 1; j < hexachord.length; j++) {
+          let diff = Math.abs(hexachord[i] - hexachord[j]) % 12;
+          if (diff > 6) diff = 12 - diff;
+          if (diff >= 1 && diff <= 6) {
+            vec[diff - 1]++;
+          }
+        }
+      }
+      return vec;
+    }
+
+    /***************************************************************************
+     * 2. ALGORITHMIC COMPOSITION ENGINE (THE 10 SCHOENBERG FEATURES)
+     ***************************************************************************/
+
+    /**
+     * Generates a complete multi-voice chamber piece implementing Schoenberg's
+     * 10 features across the 4 formal sections.
+     */
+    function generateSchoenbergPiece() {
+      const comb = findCombinatorialInversion(state.primeRow);
+      state.combinatorialPartnerRow = comb.invRow;
+      state.combinatorialIndex = comb.startPc;
+      state.inversionMapSum = comb.sumIndex;
+      state.matrix = buildTwelveToneMatrix(state.primeRow);
+
+      const events = [];
+      const aggregates = [];
+      let currentBeat = 0;
+      let eventIdCounter = 1;
+      let aggregateCounter = 1;
+
+      // Invariant pivot pitch classes: first/last notes of hexachords + shared dyad pitches
+      const invAnalysis = analyzeRowInvariants(state.primeRow, state.combinatorialPartnerRow);
+      const pivotPcs = new Set([
+        state.primeRow[0],
+        state.primeRow[5],
+        state.primeRow[6],
+        state.primeRow[11]
+      ]);
+      invAnalysis.matchedOrderIndices.forEach(idx => pivotPcs.add(state.combinatorialPartnerRow[idx]));
+
+      // Frozen registers for invariant pitch classes when "Freeze Invariant Registers" is enabled
+      const frozenOctaves = {};
+      for (let pc = 0; pc < 12; pc++) {
+        frozenOctaves[pc] = (pc % 3 === 0) ? 5 : (pc % 2 === 0 ? 4 : 3);
+      }
+
+      // Iterate through the 4 formal sections (Hexachordal Levels)
+      state.sections.forEach((sec, secIdx) => {
+        const offset = sec.areaOffset % 12;
+        // Transposed Combinatorial Area A_offset:
+        const areaPrime = state.primeRow.map(pc => (pc + offset) % 12);
+        const areaInv = state.combinatorialPartnerRow.map(pc => (pc + offset) % 12);
+        const areaRet = [...areaPrime].reverse();
+        const areaRI = [...areaInv].reverse();
+
+        const pLabel = `P${areaPrime[0]}`;
+        const iLabel = `I${areaInv[0]}`;
+        const rLabel = `R${areaPrime[0]}`;
+        const riLabel = `RI${areaInv[0]}`;
+
+        // Each section spans 16 beats (4 measures of 4/4) = two full row-pair statements (4 hexachordal aggregates)
+        const sectionPairs = [
+          { rowA: areaPrime, labelA: pLabel, rowB: areaInv, labelB: iLabel },
+          { rowA: areaRet,   labelA: rLabel, rowB: areaRI,  labelB: riLabel }
+        ];
+
+        sectionPairs.forEach((pair) => {
+          // Each combinatorial pair (rowA + rowB) divides into TWO 6+6 Aggregate Blocks!
+          // Aggregate 1: rowA[0..5] + rowB[0..5] (12 distinct pitch classes!)
+          // Aggregate 2: rowA[6..11] + rowB[6..11] (12 distinct pitch classes!)
+          for (let half = 0; half < 2; half++) {
+            const aggStartBeat = currentBeat;
+            const aggSpanBeats = 4.0; // 1 measure per 12-tone aggregate
+            const startOrder = half * 6;
+            const hexA = pair.rowA.slice(startOrder, startOrder + 6);
+            const hexB = pair.rowB.slice(startOrder, startOrder + 6);
+
+            aggregates.push({
+              index: aggregateCounter,
+              startBeat: aggStartBeat,
+              endBeat: aggStartBeat + aggSpanBeats,
+              sectionIdx: secIdx,
+              sectionName: sec.name,
+              areaOffset: offset,
+              mode: sec.mode,
+              rowA: pair.labelA,
+              rowB: pair.labelB,
+              half: half + 1
+            });
+
+            // Rhythm durations governed by Pitch-Relational Metre
+            const stepDur = aggSpanBeats / 6; // base grid = 2/3 beat per hexachord step
+
+            if (sec.mode === 'linear') {
+              // FEATURE 3: Linear Set Presentation
+              // Hauptstimme (H) plays uninterrupted 6-note linear phrase from rowA;
+              // Nebenstimme (N) and Accompaniment unfold combinatorial complement hexB.
+              for (let k = 0; k < 6; k++) {
+                const pcH = hexA[k];
+                const orderH = startOrder + k;
+                const isInvH = pivotPcs.has(pcH);
+
+                // Pitch-relational agogic adjustment
+                let beatOffset = k * stepDur;
+                let durH = stepDur * (isInvH && state.metreMode === 'pitch_relational' ? 1.15 : 0.92);
+
+                const octH = (state.freezeInvariants && isInvH) ? frozenOctaves[pcH] : (k % 2 === 0 ? 5 : 4);
+                events.push({
+                  id: eventIdCounter++,
+                  pc: pcH,
+                  octave: Math.max(4, octH),
+                  pitch: (Math.max(4, octH) + 1) * 12 + pcH,
+                  startBeat: aggStartBeat + beatOffset,
+                  duration: durH,
+                  voice: 'H',
+                  orderIdx: orderH,
+                  rowLabel: pair.labelA,
+                  sectionIdx: secIdx,
+                  aggregateIdx: aggregateCounter,
+                  isInvariant: isInvH
+                });
+
+                // Partner hexB partitioned into 2-note dyads in Nebenstimme / Harmony
+                const pcN = hexB[k];
+                const orderN = startOrder + k;
+                const isInvN = pivotPcs.has(pcN);
+                const dyadBeat = aggStartBeat + Math.floor(k / 2) * (stepDur * 2) + (k % 2) * 0.18;
+                const voiceRole = (k % 2 === 0) ? 'N' : 'Acc';
+                const octN = voiceRole === 'N' ? 4 : 3;
+
+                events.push({
+                  id: eventIdCounter++,
+                  pc: pcN,
+                  octave: (state.freezeInvariants && isInvN) ? Math.min(4, frozenOctaves[pcN]) : octN,
+                  pitch: (octN + 1) * 12 + pcN,
+                  startBeat: dyadBeat,
+                  duration: stepDur * 1.65,
+                  voice: voiceRole,
+                  orderIdx: orderN,
+                  rowLabel: pair.labelB,
+                  sectionIdx: secIdx,
+                  aggregateIdx: aggregateCounter,
+                  isInvariant: isInvN
+                });
+              }
+
+            } else if (sec.mode === 'partitioned') {
+              // FEATURE 4: Partitioning (Trichords & Dyads distributed across H, N, Acc)
+              for (let k = 0; k < 6; k++) {
+                const pcA = hexA[k];
+                const pcB = hexB[k];
+                const orderIdx = startOrder + k;
+
+                // Alternate 3-note trichordal motifs between H and N
+                const voiceA = (k < 3) ? 'H' : 'N';
+                const voiceB = (k < 3) ? 'Acc' : 'H';
+                const octA = voiceA === 'H' ? 5 : 4;
+                const octB = voiceB === 'H' ? 5 : 3;
+
+                const isInvA = pivotPcs.has(pcA);
+                const isInvB = pivotPcs.has(pcB);
+
+                events.push({
+                  id: eventIdCounter++,
+                  pc: pcA,
+                  octave: octA,
+                  pitch: (octA + 1) * 12 + pcA,
+                  startBeat: aggStartBeat + k * stepDur,
+                  duration: stepDur * 0.95,
+                  voice: voiceA,
+                  orderIdx,
+                  rowLabel: pair.labelA,
+                  sectionIdx: secIdx,
+                  aggregateIdx: aggregateCounter,
+                  isInvariant: isInvA
+                });
+
+                events.push({
+                  id: eventIdCounter++,
+                  pc: pcB,
+                  octave: octB,
+                  pitch: (octB + 1) * 12 + pcB,
+                  startBeat: aggStartBeat + k * stepDur + (stepDur * 0.33),
+                  duration: stepDur * 0.85,
+                  voice: voiceB,
+                  orderIdx,
+                  rowLabel: pair.labelB,
+                  sectionIdx: secIdx,
+                  aggregateIdx: aggregateCounter,
+                  isInvariant: isInvB
+                });
+              }
+
+            } else if (sec.mode === 'isomorphic') {
+              // FEATURE 5: Isomorphic Partitioning
+              // Apply order-index sieves {0,2,4} vs {1,3,5} symmetrically across both rows
+              const sieveEven = [0, 2, 4];
+              const sieveOdd = [1, 3, 5];
+              const combinedOrder = [...sieveEven, ...sieveOdd];
+
+              combinedOrder.forEach((localIdx, seqStep) => {
+                const pcA = hexA[localIdx];
+                const pcB = hexB[5 - localIdx]; // Mirror sieve on partner row
+                const orderA = startOrder + localIdx;
+                const orderB = startOrder + (5 - localIdx);
+
+                const isInvA = pivotPcs.has(pcA);
+                const isInvB = pivotPcs.has(pcB);
+
+                const beatPos = aggStartBeat + seqStep * stepDur;
+
+                events.push({
+                  id: eventIdCounter++,
+                  pc: pcA,
+                  octave: seqStep < 3 ? 5 : 4,
+                  pitch: ((seqStep < 3 ? 5 : 4) + 1) * 12 + pcA,
+                  startBeat: beatPos,
+                  duration: stepDur * 0.88,
+                  voice: seqStep < 3 ? 'H' : 'N',
+                  orderIdx: orderA,
+                  rowLabel: pair.labelA,
+                  sectionIdx: secIdx,
+                  aggregateIdx: aggregateCounter,
+                  isInvariant: isInvA
+                });
+
+                events.push({
+                  id: eventIdCounter++,
+                  pc: pcB,
+                  octave: seqStep < 3 ? 3 : 4,
+                  pitch: ((seqStep < 3 ? 3 : 4) + 1) * 12 + pcB,
+                  startBeat: beatPos + (stepDur * 0.25),
+                  duration: stepDur * 1.1,
+                  voice: seqStep < 3 ? 'Acc' : 'H',
+                  orderIdx: orderB,
+                  rowLabel: pair.labelB,
+                  sectionIdx: secIdx,
+                  aggregateIdx: aggregateCounter,
+                  isInvariant: isInvB
+                });
+              });
+
+            } else if (sec.mode === 'multidimensional') {
+              // FEATURE 8 & 10: Multidimensional Set Presentation & Set-Derived Harmony
+              // Each hexachord unfolds BOTH horizontally (melodic Hauptstimme) and vertically (3-note trichordal chords)
+              for (let group = 0; group < 2; group++) {
+                const groupStartBeat = aggStartBeat + group * 2.0;
+                const baseK = group * 3;
+
+                // Horizontal melody from hexA (3 notes across 2 beats)
+                for (let m = 0; m < 3; m++) {
+                  const k = baseK + m;
+                  const pcMel = hexA[k];
+                  const isInv = pivotPcs.has(pcMel);
+                  events.push({
+                    id: eventIdCounter++,
+                    pc: pcMel,
+                    octave: 5,
+                    pitch: 6 * 12 + pcMel,
+                    startBeat: groupStartBeat + m * (2.0 / 3.0),
+                    duration: (2.0 / 3.0) * 0.92,
+                    voice: 'H',
+                    orderIdx: startOrder + k,
+                    rowLabel: pair.labelA,
+                    sectionIdx: secIdx,
+                    aggregateIdx: aggregateCounter,
+                    isInvariant: isInv
+                  });
+                }
+
+                // Simultaneous vertical 3-note Set-Derived Chord from hexB
+                for (let m = 0; m < 3; m++) {
+                  const k = baseK + m;
+                  const pcChord = hexB[k];
+                  const isInv = pivotPcs.has(pcChord);
+                  const oct = m === 0 ? 3 : 4;
+                  events.push({
+                    id: eventIdCounter++,
+                    pc: pcChord,
+                    octave: oct,
+                    pitch: (oct + 1) * 12 + pcChord,
+                    startBeat: groupStartBeat,
+                    duration: 1.85,
+                    voice: m === 2 ? 'N' : 'Acc',
+                    orderIdx: startOrder + k,
+                    rowLabel: pair.labelB,
+                    sectionIdx: secIdx,
+                    aggregateIdx: aggregateCounter,
+                    isInvariant: isInv
+                  });
+                }
+              }
+            }
+
+            currentBeat += aggSpanBeats;
+            aggregateCounter++;
+          }
+        });
+      });
+
+      state.scoreEvents = events;
+      state.aggregates = aggregates;
+      state.totalBeats = currentBeat;
+      document.getElementById('readoutTotalBeats').textContent = state.totalBeats;
+    }
+
+    /***************************************************************************
+     * 3. WEB AUDIO API POLYPHONIC CHAMBER SYNTHESIZER
+     ***************************************************************************/
+
+    let audioCtx = null;
+    let masterGain = null;
+    let reverbNode = null;
+
+    function initAudioEngine() {
+      if (audioCtx) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return;
+      }
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.55;
+
+      // Create synthetic concert hall impulse response for Viennese chamber warmth
+      reverbNode = createConcertHallReverb(audioCtx, 2.1, 2.4);
+      const wetGain = audioCtx.createGain();
+      wetGain.gain.value = 0.28;
+      const dryGain = audioCtx.createGain();
+      dryGain.gain.value = 0.85;
+
+      masterGain.connect(dryGain);
+      masterGain.connect(reverbNode);
+      reverbNode.connect(wetGain);
+
+      dryGain.connect(audioCtx.destination);
+      wetGain.connect(audioCtx.destination);
+    }
+
+    function createConcertHallReverb(ctx, duration, decay) {
+      const sampleRate = ctx.sampleRate;
+      const length = sampleRate * duration;
+      const impulse = ctx.createBuffer(2, length, sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const channelData = impulse.getChannelData(ch);
+        for (let i = 0; i < length; i++) {
+          channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        }
+      }
+      const convolver = ctx.createConvolver();
+      convolver.buffer = impulse;
+      return convolver;
+    }
+
+    /**
+     * Synthesizes a single note with voice-specific stereo panning, envelope, and timbre.
+     */
+    function triggerSynthNote(midiPitch, durationSec, voice = 'H', isInvariant = false) {
+      try {
+        initAudioEngine();
+        const now = audioCtx.currentTime;
+        const freq = 440 * Math.pow(2, (midiPitch - 69) / 12);
+
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const noteGain = audioCtx.createGain();
+        const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+        // Stereo stage positioning by Schoenberg voice role
+        if (panner) {
+          panner.pan.value = voice === 'H' ? -0.25 : (voice === 'N' ? 0.3 : 0.05);
+        }
+
+        // Voice & Invariant dynamic scaling
+        let peakGain = voice === 'H' ? 0.24 : (voice === 'N' ? 0.16 : 0.11);
+        if (isInvariant) peakGain *= 1.2; // Agogic/dynamic accent on Invariant Pivot pitches
+
+        const timbre = state.timbre;
+        let attack = 0.02;
+        let release = Math.min(0.4, durationSec * 0.45);
+
+        if (timbre === 'quartet') {
+          osc1.type = 'sawtooth';
+          osc2.type = 'triangle';
+          osc2.detune.value = 6; // Warm bowed string chorus
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(freq * 4.2, now);
+          attack = 0.055;
+          release = 0.28;
+        } else if (timbre === 'piano') {
+          osc1.type = 'triangle';
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(freq * 2, now); // 2nd harmonic overtone
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(freq * 6, now);
+          filter.frequency.exponentialRampToValueAtTime(freq * 1.4, now + durationSec);
+          attack = 0.008;
+          release = 0.22;
+        } else if (timbre === 'winds') {
+          osc1.type = 'square';
+          osc2.type = 'sine';
+          osc2.detune.value = -4;
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(freq * 2.2, now);
+          filter.Q.value = 1.4;
+          attack = 0.04;
+          release = 0.20;
+        } else {
+          // Moderne Polyphonic Synth
+          osc1.type = 'sawtooth';
+          osc2.type = 'sine';
+          osc2.detune.value = 9;
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(freq * 3.5, now);
+          attack = 0.02;
+          release = 0.32;
+        }
+
+        osc1.frequency.setValueAtTime(freq, now);
+        if (timbre !== 'piano') {
+          osc2.frequency.setValueAtTime(freq, now);
+        }
+
+        noteGain.gain.setValueAtTime(0.0001, now);
+        noteGain.gain.linearRampToValueAtTime(peakGain, now + attack);
+        noteGain.gain.exponentialRampToValueAtTime(peakGain * 0.6, now + Math.max(attack + 0.02, durationSec * 0.7));
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec + release);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(noteGain);
+
+        if (panner) {
+          noteGain.connect(panner);
+          panner.connect(masterGain);
+        } else {
+          noteGain.connect(masterGain);
+        }
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + durationSec + release + 0.05);
+        osc2.stop(now + durationSec + release + 0.05);
+      } catch (e) {
+        console.error('Audio synthesis error:', e);
+      }
+    }
+
+    /**
+     * Auditions any 12-note row sequence immediately when clicked in the Workbench or Matrix.
+     */
+    function auditionRowSequence(rowPcs, voiceRole = 'H', label = 'P') {
+      initAudioEngine();
+      showToast(`Auditioning ${label}: [${rowPcs.map(pc => NOTE_NAMES[pc]).join(' – ')}]`);
+      rowPcs.forEach((pc, idx) => {
+        setTimeout(() => {
+          const midi = 60 + pc; // Middle C octave
+          triggerSynthNote(midi, 0.22, voiceRole, idx === 0 || idx === 5 || idx === 6);
+        }, idx * 145);
+      });
+    }
+
+    /***************************************************************************
+     * 4. UI RENDERING: WORKBENCH, 12x12 MATRIX, FORMAL CARDS & 10 FEATURES
+     ***************************************************************************/
+
+    function formatPitch(pc) {
+      return state.matrixNotation === 'note' ? NOTE_NAMES[pc] : String(pc);
+    }
+
+    function renderWorkbench() {
+      const comb = findCombinatorialInversion(state.primeRow);
+      state.combinatorialPartnerRow = comb.invRow;
+      state.combinatorialIndex = comb.startPc;
+      state.inversionMapSum = comb.sumIndex;
+
+      // Update labels
+      const pStart = state.primeRow[0];
+      const iStart = comb.startPc;
+      document.getElementById('labelActivePrime').textContent =
+        `Prime Row (P${pStart}) — Hauptstimme Basis`;
+      document.getElementById('labelActiveInv').textContent =
+        `Combinatorial Partner (I${iStart}) — Aggregate Complement`;
+
+      const badge = document.getElementById('badgeCombinatorial');
+      if (comb.isCombinatorial) {
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1';
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 6+6 I-Combinatorial (P${pStart}+I${iStart})`;
+      } else {
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1';
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Semi-Combinatorial (P${pStart}+I${iStart})`;
+      }
+
+      // Render P strip
+      const stripP = document.getElementById('stripPrimeRow');
+      stripP.innerHTML = '';
+      state.primeRow.forEach((pc, idx) => {
+        const cell = document.createElement('div');
+        const isSecondHex = idx >= 6;
+        cell.className = `flex flex-col items-center justify-center py-1 rounded border text-center cursor-pointer transition ${
+          isSecondHex
+            ? 'bg-amber-500/10 border-amber-500/25 text-amber-200 hover:bg-amber-500/25'
+            : 'bg-amber-500/20 border-amber-500/40 text-amber-100 hover:bg-amber-500/35'
+        } ${idx === 5 ? 'mr-0.5 border-r-2 border-r-amber-400' : ''}`;
+        cell.innerHTML = `
+          <span class="text-[9px] font-mono text-slate-400">#${idx}</span>
+          <span class="text-xs font-mono font-bold">${formatPitch(pc)}</span>
+        `;
+        cell.addEventListener('click', () => triggerSynthNote(60 + pc, 0.35, 'H', true));
+        stripP.appendChild(cell);
+      });
+
+      // Render I strip
+      const stripI = document.getElementById('stripInvRow');
+      stripI.innerHTML = '';
+      comb.invRow.forEach((pc, idx) => {
+        const cell = document.createElement('div');
+        const isSecondHex = idx >= 6;
+        cell.className = `flex flex-col items-center justify-center py-1 rounded border text-center cursor-pointer transition ${
+          isSecondHex
+            ? 'bg-sky-500/10 border-sky-500/25 text-sky-200 hover:bg-sky-500/25'
+            : 'bg-sky-500/20 border-sky-500/40 text-sky-100 hover:bg-sky-500/35'
+        } ${idx === 5 ? 'mr-0.5 border-r-2 border-r-sky-400' : ''}`;
+        cell.innerHTML = `
+          <span class="text-[9px] font-mono text-slate-400">#${idx}</span>
+          <span class="text-xs font-mono font-bold">${formatPitch(pc)}</span>
+        `;
+        cell.addEventListener('click', () => triggerSynthNote(60 + pc, 0.35, 'N', true));
+        stripI.appendChild(cell);
+      });
+
+      // Update Interval Vector Badge
+      const icVec = computeIntervalVector(state.primeRow.slice(0, 6));
+      document.getElementById('icVectorBadge').textContent = `[${icVec.join(', ')}]`;
+
+      renderCustomKeyboard();
+    }
+
+    function renderCustomKeyboard() {
+      const container = document.getElementById('customPitchKeyboard');
+      container.innerHTML = '';
+      for (let pc = 0; pc < 12; pc++) {
+        const selectedIdx = state.customHexSelection.indexOf(pc);
+        const isSelected = selectedIdx !== -1;
+        const btn = document.createElement('button');
+        btn.className = `py-1.5 rounded border text-xs font-mono font-semibold transition flex flex-col items-center ${
+          isSelected
+            ? 'bg-amber-500 text-obsidian-950 border-amber-300 shadow'
+            : 'bg-obsidian-950 text-slate-300 border-slate-800 hover:border-amber-500/50 hover:text-white'
+        }`;
+        btn.innerHTML = `
+          <span>${NOTE_NAMES[pc]}</span>
+          <span class="text-[9px] opacity-75">${isSelected ? `#${selectedIdx + 1}` : pc}</span>
+        `;
+        btn.addEventListener('click', () => handleCustomHexClick(pc));
+        container.appendChild(btn);
+      }
+      document.getElementById('btnResetBuilder').textContent = `Clear (${state.customHexSelection.length}/6)`;
+    }
+
+    function handleCustomHexClick(pc) {
+      triggerSynthNote(60 + pc, 0.25, 'H');
+      const idx = state.customHexSelection.indexOf(pc);
+      if (idx !== -1) {
+        state.customHexSelection.splice(idx, 1);
+      } else if (state.customHexSelection.length < 6) {
+        state.customHexSelection.push(pc);
+      }
+
+      if (state.customHexSelection.length === 6) {
+        // Synthesize full combinatorial row from the user's 6 chosen pitch classes
+        state.primeRow = generateCombinatorialRow(state.customHexSelection);
+        state.customHexSelection = [];
+        refreshAllStudioViews();
+        showToast('Synthesized new 12-tone Combinatorial Row from your custom hexachord!');
+      } else {
+        renderCustomKeyboard();
+      }
+    }
+
+    /**
+     * Renders the interactive 12x12 Matrix with Hexachordal Area & Invariant highlights.
+     */
+    function renderMatrix() {
+      const m = state.matrix;
+      if (!m) return;
+
+      const container = document.getElementById('matrixGrid');
+      container.innerHTML = '';
+
+      // Determine invariant highlights for currently selected row form
+      const selectedRow = getRowFormFromMatrix(m, state.selectedMatrixForm.type, state.selectedMatrixForm.index);
+      const invResult = analyzeRowInvariants(state.primeRow, selectedRow);
+
+      // Update Invariant Readout
+      const formName = `${state.selectedMatrixForm.type}${state.selectedMatrixForm.index}`;
+      document.getElementById('matrixSelectedLabel').textContent = `Inspecting ${formName} vs P${state.primeRow[0]}`;
+      const dyadStr = invResult.sharedDyadNames.length ? invResult.sharedDyadNames.slice(0, 4).join(', ') : 'None';
+      const triStr = invResult.sharedTrichordNames.length ? invResult.sharedTrichordNames.slice(0, 3).join(', ') : 'None';
+      document.getElementById('invariantReadout').innerHTML = `
+        <div class="flex flex-col gap-0.5">
+          <div><span class="text-amber-400">Relation:</span> ${invResult.hexRelation}</div>
+          <div><span class="text-rose-400">Shared Dyads:</span> ${dyadStr} | <span class="text-sky-400">Trichords:</span> ${triStr}</div>
+        </div>
+      `;
+
+      // Create 14x14 grid (headers on all 4 sides)
+      const table = document.createElement('div');
+      table.className = 'grid grid-cols-14 gap-0.5 text-center font-mono text-[11px]';
+      table.style.gridTemplateColumns = 'repeat(14, minmax(0, 1fr))';
+
+      // Top Header Row (Corner + I0..I11 + Corner)
+      table.appendChild(createCornerCell('P \\ I'));
+      for (let c = 0; c < 12; c++) {
+        const iPc = m.grid[0][c];
+        const isCombinatorialCol = (c === 0) || (iPc === state.combinatorialIndex);
+        const isSelectedCol = (state.selectedMatrixForm.type === 'I' && state.selectedMatrixForm.index === iPc);
+        const btn = document.createElement('button');
+        btn.className = `py-1 rounded font-semibold transition ${
+          isSelectedCol
+            ? 'bg-rose-500 text-white'
+            : isCombinatorialCol
+            ? 'bg-sky-500/25 text-sky-300 border border-sky-500/40'
+            : 'bg-obsidian-950 text-sky-400 hover:bg-slate-800'
+        } ${c === 5 ? 'hex-border-right' : ''}`;
+        btn.textContent = `I${iPc}`;
+        btn.addEventListener('click', () => selectAndAuditionMatrixForm('I', iPc));
+        table.appendChild(btn);
+      }
+      table.appendChild(createCornerCell('R'));
+
+      // 12 Matrix Rows
+      for (let r = 0; r < 12; r++) {
+        const pPc = m.grid[r][0];
+        const isHomeRow = (r === 0);
+        const isSelectedP = (state.selectedMatrixForm.type === 'P' && state.selectedMatrixForm.index === pPc);
+
+        // Left P Header
+        const btnP = document.createElement('button');
+        btnP.className = `py-1 rounded font-semibold transition ${
+          isSelectedP
+            ? 'bg-rose-500 text-white'
+            : isHomeRow
+            ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
+            : 'bg-obsidian-950 text-amber-400 hover:bg-slate-800'
+        } ${r === 5 ? 'hex-border-bottom' : ''}`;
+        btnP.textContent = `P${pPc}`;
+        btnP.addEventListener('click', () => selectAndAuditionMatrixForm('P', pPc));
+        table.appendChild(btnP);
+
+        // 12 Pitch-Class Cells
+        for (let c = 0; c < 12; c++) {
+          const pc = m.grid[r][c];
+          const colStartPc = m.grid[0][c];
+
+          // Check if cell belongs to active combinatorial pair (Row 0 or Col matching combinatorialIndex)
+          const inActiveArea = (r === 0) || (colStartPc === state.combinatorialIndex);
+
+          // Check if cell is part of the currently selected row/col and is an Invariant segment
+          let isSelectedInvariant = false;
+          if ((state.selectedMatrixForm.type === 'P' || state.selectedMatrixForm.type === 'R') && pPc === state.selectedMatrixForm.index) {
+            const orderIdx = state.selectedMatrixForm.type === 'R' ? (11 - c) : c;
+            if (invResult.matchedOrderIndices.has(orderIdx)) isSelectedInvariant = true;
+          } else if ((state.selectedMatrixForm.type === 'I' || state.selectedMatrixForm.type === 'RI') && colStartPc === state.selectedMatrixForm.index) {
+            const orderIdx = state.selectedMatrixForm.type === 'RI' ? (11 - r) : r;
+            if (invResult.matchedOrderIndices.has(orderIdx)) isSelectedInvariant = true;
+          }
+
+          const cell = document.createElement('div');
+          cell.className = `matrix-cell py-1 rounded cursor-pointer border ${
+            isSelectedInvariant
+              ? 'bg-rose-500/35 border-rose-400 text-white font-bold'
+              : inActiveArea
+              ? 'bg-amber-500/15 border-amber-500/30 text-amber-200 font-medium'
+              : 'bg-obsidian-950/90 border-slate-800/70 text-slate-300 hover:border-slate-600'
+          } ${c === 5 ? 'hex-border-right' : ''} ${r === 5 ? 'hex-border-bottom' : ''}`;
+          cell.textContent = formatPitch(pc);
+          cell.title = `Row P${pPc}, Col I${colStartPc} • Pitch: ${NOTE_NAMES[pc]} (${pc})`;
+          cell.addEventListener('click', () => {
+            triggerSynthNote(60 + pc, 0.3, 'H', isSelectedInvariant);
+          });
+          table.appendChild(cell);
+        }
+
+        // Right R Header
+        const isSelectedR = (state.selectedMatrixForm.type === 'R' && state.selectedMatrixForm.index === pPc);
+        const btnR = document.createElement('button');
+        btnR.className = `py-1 rounded font-semibold transition ${
+          isSelectedR
+            ? 'bg-rose-500 text-white'
+            : isHomeRow
+            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+            : 'bg-obsidian-950 text-emerald-400 hover:bg-slate-800'
+        } ${r === 5 ? 'hex-border-bottom' : ''}`;
+        btnR.textContent = `R${pPc}`;
+        btnR.addEventListener('click', () => selectAndAuditionMatrixForm('R', pPc));
+        table.appendChild(btnR);
+      }
+
+      // Bottom Header Row (Corner + RI0..RI11 + Corner)
+      table.appendChild(createCornerCell('RI'));
+      for (let c = 0; c < 12; c++) {
+        const iPc = m.grid[0][c];
+        const isSelectedRI = (state.selectedMatrixForm.type === 'RI' && state.selectedMatrixForm.index === iPc);
+        const btnRI = document.createElement('button');
+        btnRI.className = `py-1 rounded font-semibold transition ${
+          isSelectedRI
+            ? 'bg-rose-500 text-white'
+            : 'bg-obsidian-950 text-rose-400 hover:bg-slate-800'
+        } ${c === 5 ? 'hex-border-right' : ''}`;
+        btnRI.textContent = `RI${iPc}`;
+        btnRI.addEventListener('click', () => selectAndAuditionMatrixForm('RI', iPc));
+        table.appendChild(btnRI);
+      }
+      table.appendChild(createCornerCell('XII'));
+
+      container.appendChild(table);
+    }
+
+    function createCornerCell(text) {
+      const div = document.createElement('div');
+      div.className = 'py-1 text-[9px] text-slate-500 flex items-center justify-center font-mono';
+      div.textContent = text;
+      return div;
+    }
+
+    function selectAndAuditionMatrixForm(type, indexPc) {
+      state.selectedMatrixForm = { type, index: indexPc };
+      const row = getRowFormFromMatrix(state.matrix, type, indexPc);
+      renderMatrix();
+      auditionRowSequence(row, type === 'P' || type === 'R' ? 'H' : 'N', `${type}${indexPc}`);
+    }
+
+    /**
+     * Renders the 4 Formal Section Cards (Hexachordal Levels & Partitioning Modes).
+     */
+    function renderFormalSections() {
+      const container = document.getElementById('formalSectionsGrid');
+      container.innerHTML = '';
+
+      state.sections.forEach((sec, idx) => {
+        const pPc = (state.primeRow[0] + sec.areaOffset) % 12;
+        const iPc = (state.combinatorialIndex + sec.areaOffset) % 12;
+
+        const card = document.createElement('div');
+        card.id = `formalCard-${idx}`;
+        card.className = 'bg-obsidian-950 border border-slate-800 rounded-xl p-3 flex flex-col justify-between gap-2 transition';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-display font-semibold text-white">${sec.name}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              P${pPc} + I${iPc}
+            </span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div>
+              <label class="block text-[10px] font-mono text-slate-400 mb-0.5">Hexachordal Area (Level)</label>
+              <select data-sec="${idx}" class="sec-area-select w-full bg-obsidian-900 text-xs text-slate-200 border border-slate-800 rounded px-2 py-1 font-mono focus:outline-none focus:border-amber-500">
+                ${Array.from({ length: 12 }, (_, k) => {
+                  const tkP = (state.primeRow[0] + k) % 12;
+                  const tkI = (state.combinatorialIndex + k) % 12;
+                  return `<option value="${k}" ${sec.areaOffset === k ? 'selected' : ''}>Area A${k} (P${tkP} / I${tkI})</option>`;
+                }).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-mono text-slate-400 mb-0.5">Set Presentation &amp; Partitioning</label>
+              <select data-sec="${idx}" class="sec-mode-select w-full bg-obsidian-900 text-xs text-sky-300 border border-slate-800 rounded px-2 py-1 font-mono focus:outline-none focus:border-sky-500">
+                <option value="linear" ${sec.mode === 'linear' ? 'selected' : ''}>Linear Hauptstimme (6+6)</option>
+                <option value="partitioned" ${sec.mode === 'partitioned' ? 'selected' : ''}>Partitioned Trichords/Dyads</option>
+                <option value="isomorphic" ${sec.mode === 'isomorphic' ? 'selected' : ''}>Isomorphic Order Sieves</option>
+                <option value="multidimensional" ${sec.mode === 'multidimensional' ? 'selected' : ''}>Multidimensional Set Harmony</option>
+              </select>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Attach listeners
+      document.querySelectorAll('.sec-area-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-sec'), 10);
+          state.sections[idx].areaOffset = parseInt(e.target.value, 10);
+          refreshAllStudioViews();
+        });
+      });
+
+      document.querySelectorAll('.sec-mode-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-sec'), 10);
+          state.sections[idx].mode = e.target.value;
+          refreshAllStudioViews();
+        });
+      });
+    }
+
+    /**
+     * Renders the 12 Pitch-Class Aggregate LEDs and the 10-Feature Telemetry Grid.
+     */
+    function renderAggregateLeds(activePcsSet = new Set()) {
+      const container = document.getElementById('aggregateLeds');
+      container.innerHTML = '';
+      for (let pc = 0; pc < 12; pc++) {
+        const isLit = activePcsSet.has(pc);
+        const led = document.createElement('div');
+        led.className = `py-1 rounded text-center font-mono text-[10px] border transition ${
+          isLit
+            ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200 font-bold shadow-sm'
+            : 'bg-obsidian-900 border-slate-800 text-slate-500'
+        }`;
+        led.textContent = formatPitch(pc);
+        container.appendChild(led);
+      }
+      document.getElementById('aggregateCountBadge').textContent =
+        `${activePcsSet.size} / 12 Pitch Classes in Active Aggregate`;
+    }
+
+    function renderTenFeaturesTelemetry(activeFeatureIds = new Set(['combinatoriality', 'aggregates', 'hex_levels', 'invariants'])) {
+      const container = document.getElementById('tenFeaturesGrid');
+      container.innerHTML = '';
+      TEN_FEATURES_INFO.forEach(feat => {
+        const isActive = activeFeatureIds.has(feat.id);
+        const div = document.createElement('div');
+        div.className = `p-2.5 rounded-lg border transition ${
+          isActive
+            ? 'bg-obsidian-950 border-amber-500/50 shadow-inner'
+            : 'bg-obsidian-950/50 border-slate-800/70 opacity-65'
+        }`;
+        div.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-mono ${isActive ? 'text-amber-400 font-bold' : 'text-slate-500'}">#${feat.num} ${feat.title}</span>
+            <span class="w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-slate-700'}"></span>
+          </div>
+          <p class="text-[10px] text-slate-400 leading-snug">${feat.desc}</p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    /***************************************************************************
+     * 5. SCORE & AGGREGATE PIANO-ROLL CANVAS VISUALIZER
+     ***************************************************************************/
+
+    const canvas = document.getElementById('scoreCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeScoreCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawScoreCanvas();
+    }
+
+    function drawScoreCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const leftMargin = 46;
+      const topBannerH = 28;
+      const plotW = w - leftMargin - 12;
+      const plotH = h - topBannerH - 18;
+
+      const minMidi = 45; // A2
+      const maxMidi = 86; // D6
+      const midiRange = maxMidi - minMidi;
+
+      const beatToX = (beat) => leftMargin + (beat / state.totalBeats) * plotW;
+      const midiToY = (midi) => topBannerH + plotH - ((midi - minMidi) / midiRange) * plotH;
+
+      // 1. Draw Horizontal Pitch/Staff Guide Lines (C3, G3, C4, E4, G4, C5, G5, C6)
+      const staffPitches = [48, 55, 60, 64, 67, 72, 79, 84];
+      ctx.lineWidth = 1;
+      staffPitches.forEach(midi => {
+        const y = midiToY(midi);
+        ctx.strokeStyle = (midi % 12 === 0) ? 'rgba(148, 163, 184, 0.22)' : 'rgba(71, 85, 105, 0.14)';
+        ctx.beginPath();
+        ctx.moveTo(leftMargin, y);
+        ctx.lineTo(w - 12, y);
+        ctx.stroke();
+
+        // Label on left axis
+        const oct = Math.floor(midi / 12) - 1;
+        const pcName = NOTE_NAMES[midi % 12];
+        ctx.fillStyle = (midi % 12 === 0) ? '#94a3b8' : '#64748b';
+        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.fillText(`${pcName}${oct}`, 8, y + 3);
+      });
+
+      // 2. Draw Formal Section Headers & Vertical Dashed Aggregate Boundaries
+      state.aggregates.forEach((agg) => {
+        const xStart = beatToX(agg.startBeat);
+        const xEnd = beatToX(agg.endBeat);
+
+        // Highlight currently playing aggregate column
+        const isCurrentAgg = state.currentBeat >= agg.startBeat && state.currentBeat < agg.endBeat;
+        if (isCurrentAgg) {
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.05)';
+          ctx.fillRect(xStart, topBannerH, xEnd - xStart, plotH);
+        }
+
+        // Dashed vertical Aggregate Boundary line
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = (agg.index % 4 === 1)
+          ? 'rgba(245, 158, 11, 0.55)' // Formal section boundary
+          : 'rgba(56, 189, 248, 0.26)'; // 12-tone aggregate boundary
+        ctx.lineWidth = (agg.index % 4 === 1) ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.moveTo(xStart, 0);
+        ctx.lineTo(xStart, h);
+        ctx.stroke();
+        ctx.restore();
+
+        // Top Banner Aggregate / Section Labels
+        ctx.fillStyle = isCurrentAgg ? '#fbbf24' : '#64748b';
+        ctx.font = '9px "JetBrains Mono", monospace';
+        if (xEnd - xStart > 34) {
+          ctx.fillText(`AGG#${agg.index}`, xStart + 4, 12);
+          ctx.fillStyle = '#475569';
+          ctx.fillText(`${agg.rowA}+${agg.rowB}`, xStart + 4, 23);
+        }
+      });
+
+      // 3. Connect Hauptstimme (H) Linear Voice Trajectory with subtle phrase line
+      const hEvents = state.scoreEvents.filter(e => e.voice === 'H').sort((a, b) => a.startBeat - b.startBeat);
+      if (hEvents.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.28)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        hEvents.forEach((ev, i) => {
+          const x = beatToX(ev.startBeat + ev.duration * 0.2);
+          const y = midiToY(ev.pitch);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 4. Render All Note Events with Voice Role Colors, Order Indices, and Invariant Pivot Rings
+      state.scoreEvents.forEach(ev => {
+        const x = beatToX(ev.startBeat);
+        const wNote = Math.max(5, (ev.duration / state.totalBeats) * plotW - 1.5);
+        const y = midiToY(ev.pitch);
+        const hNote = ev.voice === 'H' ? 9 : 7;
+
+        const isActiveNow = state.isPlaying &&
+          state.currentBeat >= ev.startBeat &&
+          state.currentBeat <= (ev.startBeat + ev.duration);
+
+        // Color by Schoenberg Voice Hierarchy
+        let fill = '#f59e0b'; // Hauptstimme Gold
+        let stroke = '#fde68a';
+        if (ev.voice === 'N') {
+          fill = '#38bdf8';   // Nebenstimme Cyan
+          stroke = '#bae6fd';
+        } else if (ev.voice === 'Acc') {
+          fill = '#a78bfa';   // Set-Derived Harmony Violet
+          stroke = '#ddd6fe';
+        }
+
+        // Draw Note Bar
+        ctx.save();
+        ctx.fillStyle = isActiveNow ? '#ffffff' : fill;
+        ctx.globalAlpha = isActiveNow ? 1.0 : (ev.voice === 'Acc' ? 0.78 : 0.92);
+        ctx.beginPath();
+        ctx.roundRect(x, y - hNote / 2, wNote, hNote, 3);
+        ctx.fill();
+
+        if (isActiveNow) {
+          ctx.shadowColor = fill;
+          ctx.shadowBlur = 12;
+          ctx.strokeStyle = fill;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Highlight Invariant Pivot Pitches with Coral/Gold Ring
+        if (ev.isInvariant) {
+          ctx.save();
+          ctx.strokeStyle = '#fb7185';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(x + 3.5, y, hNote * 0.85, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Note Pitch & Order Number Annotation (for Hauptstimme or wide bars)
+        if (ev.voice === 'H' && wNote > 14) {
+          ctx.fillStyle = isActiveNow ? '#fbbf24' : '#e2e8f0';
+          ctx.font = '9px "JetBrains Mono", monospace';
+          ctx.fillText(`${formatPitch(ev.pc)}`, x + 1, y - 6);
+        }
+      });
+
+      // 5. Draw Live Playhead
+      const playheadX = beatToX(state.currentBeat);
+      ctx.save();
+      ctx.strokeStyle = '#f43f5e';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(playheadX, 0);
+      ctx.lineTo(playheadX, h);
+      ctx.stroke();
+
+      // Playhead top diamond
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath();
+      ctx.arc(playheadX, topBannerH, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Interactive Canvas Scrubbing
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const leftMargin = 46;
+      const plotW = rect.width - leftMargin - 12;
+      const norm = Math.max(0, Math.min(1, (clickX - leftMargin) / plotW));
+      state.currentBeat = norm * state.totalBeats;
+      state.triggeredEventIds.clear();
+      // Mark past events as already triggered so we only trigger notes from this beat onward
+      state.scoreEvents.forEach(ev => {
+        if (ev.startBeat < state.currentBeat - 0.05) {
+          state.triggeredEventIds.add(ev.id);
+        }
+      });
+      updateLiveTelemetryForBeat(state.currentBeat);
+      drawScoreCanvas();
+    });
+
+    /***************************************************************************
+     * 6. REAL-TIME TRANSPORT & TELEMETRY SCHEDULER
+     ***************************************************************************/
+
+    function transportTick(timestamp) {
+      if (!state.isPlaying) return;
+
+      if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+      const deltaSec = (timestamp - state.lastFrameTime) / 1000;
+      state.lastFrameTime = timestamp;
+
+      const beatsPerSec = state.tempo / 60;
+      state.currentBeat += deltaSec * beatsPerSec;
+
+      if (state.currentBeat >= state.totalBeats) {
+        if (state.loop) {
+          state.currentBeat = 0;
+          state.triggeredEventIds.clear();
+        } else {
+          stopPlayback();
+          return;
+        }
+      }
+
+      // Trigger any score events whose startBeat has been reached
+      const lookahead = 0.04;
+      state.scoreEvents.forEach(ev => {
+        if (!state.triggeredEventIds.has(ev.id) &&
+            ev.startBeat <= state.currentBeat + lookahead &&
+            ev.startBeat >= state.currentBeat - 0.25) {
+          state.triggeredEventIds.add(ev.id);
+          const durSec = Math.max(0.12, ev.duration / beatsPerSec);
+          triggerSynthNote(ev.pitch, durSec, ev.voice, ev.isInvariant);
+        }
+      });
+
+      updateLiveTelemetryForBeat(state.currentBeat);
+      drawScoreCanvas();
+
+      requestAnimationFrame(transportTick);
+    }
+
+    function updateLiveTelemetryForBeat(beat) {
+      document.getElementById('readoutBeat').textContent = (beat + 1).toFixed(1);
+
+      // Find active aggregate
+      const activeAgg = state.aggregates.find(a => beat >= a.startBeat && beat < a.endBeat) || state.aggregates[0];
+      if (!activeAgg) return;
+
+      document.getElementById('readoutAggregateIdx').textContent = `#${activeAgg.index} (${activeAgg.half}/2)`;
+      document.getElementById('liveSectionBadge').textContent =
+        `${activeAgg.sectionName} • Area A${activeAgg.areaOffset} (${activeAgg.rowA}+${activeAgg.rowB})`;
+      document.getElementById('activeRowPairReadout').textContent =
+        `Pair: ${activeAgg.rowA} + ${activeAgg.rowB}`;
+      document.getElementById('activePartitionReadout').textContent =
+        `Mode: ${activeAgg.mode.toUpperCase()}`;
+
+      // Highlight active formal section card
+      state.sections.forEach((_, idx) => {
+        const card = document.getElementById(`formalCard-${idx}`);
+        if (card) {
+          if (idx === activeAgg.sectionIdx) {
+            card.className = 'bg-obsidian-950 border border-amber-500/70 rounded-xl p-3 flex flex-col justify-between gap-2 transition shadow-md';
+          } else {
+            card.className = 'bg-obsidian-950 border border-slate-800 rounded-xl p-3 flex flex-col justify-between gap-2 transition';
+          }
+        }
+      });
+
+      // Collect pitch classes sounded so far within the current aggregate
+      const aggEventsSoFar = state.scoreEvents.filter(
+        ev => ev.aggregateIdx === activeAgg.index && ev.startBeat <= beat + 0.08
+      );
+      const soundedPcs = new Set(aggEventsSoFar.map(e => e.pc));
+      renderAggregateLeds(soundedPcs);
+
+      // Find most recent note event for analytical text readout
+      const latestEv = aggEventsSoFar[aggEventsSoFar.length - 1];
+      if (latestEv) {
+        document.getElementById('activeEventAnalyticalText').textContent =
+          `Voice ${latestEv.voice} playing ${NOTE_NAMES[latestEv.pc]}${latestEv.octave} (Order #${latestEv.orderIdx} of ${latestEv.rowLabel})${latestEv.isInvariant ? ' ★ INVARIANT PIVOT' : ''}`;
+      }
+
+      // Highlight which of the 10 Schoenberg features are active in this measure
+      const activeFeats = new Set(['combinatoriality', 'aggregates', 'invariants', 'hex_levels']);
+      if (state.metreMode === 'pitch_relational') activeFeats.add('pitch_metre');
+      if (activeAgg.mode === 'linear') activeFeats.add('linear');
+      if (activeAgg.mode === 'partitioned') {
+        activeFeats.add('partitioning');
+        activeFeats.add('set_harmony');
+      }
+      if (activeAgg.mode === 'isomorphic') {
+        activeFeats.add('isomorphic');
+        activeFeats.add('partitioning');
+      }
+      if (activeAgg.mode === 'multidimensional') {
+        activeFeats.add('multidim');
+        activeFeats.add('set_harmony');
+      }
+      renderTenFeaturesTelemetry(activeFeats);
+    }
+
+    function togglePlayback() {
+      initAudioEngine();
+      if (state.isPlaying) {
+        state.isPlaying = false;
+        document.getElementById('labelPlay').textContent = 'Resume';
+      } else {
+        state.isPlaying = true;
+        state.lastFrameTime = 0;
+        document.getElementById('labelPlay').textContent = 'Pause';
+        requestAnimationFrame(transportTick);
+      }
+    }
+
+    function stopPlayback() {
+      state.isPlaying = false;
+      state.currentBeat = 0;
+      state.triggeredEventIds.clear();
+      document.getElementById('labelPlay').textContent = 'Play Score';
+      updateLiveTelemetryForBeat(0);
+      drawScoreCanvas();
+    }
+
+    /***************************************************************************
+     * 7. STANDARD MIDI FILE (.MID) BINARY EXPORT & JSON CLIPBOARD EXPORT
+     ***************************************************************************/
+
+    function exportStandardMidiFile() {
+      const ticksPerBeat = 480;
+      const tracks = ['H', 'N', 'Acc'].map(voiceRole => {
+        const voiceEvents = state.scoreEvents.filter(e => e.voice === voiceRole);
+        const midiActions = [];
+        voiceEvents.forEach(ev => {
+          const startTick = Math.round(ev.startBeat * ticksPerBeat);
+          const endTick = Math.round((ev.startBeat + ev.duration) * ticksPerBeat);
+          const vel = ev.voice === 'H' ? (ev.isInvariant ? 110 : 96) : (ev.voice === 'N' ? 82 : 68);
+          midiActions.push({ tick: startTick, type: 0x90, pitch: ev.pitch, vel });
+          midiActions.push({ tick: endTick,   type: 0x80, pitch: ev.pitch, vel: 0 });
+        });
+        midiActions.sort((a, b) => a.tick - b.tick || a.type - b.type);
+
+        const bytes = [];
+        let lastTick = 0;
+        midiActions.forEach(act => {
+          const delta = Math.max(0, act.tick - lastTick);
+          lastTick = act.tick;
+          bytes.push(...writeVarLen(delta));
+          bytes.push(act.type, act.pitch & 0x7F, act.vel & 0x7F);
+        });
+        // End of Track meta event
+        bytes.push(0x00, 0xFF, 0x2F, 0x00);
+        return bytes;
+      });
+
+      const header = [
+        0x4D, 0x54, 0x68, 0x64, // 'MThd'
+        0x00, 0x00, 0x00, 0x06, // length 6
+        0x00, 0x01,             // format 1 (multi-track)
+        0x00, tracks.length,    // number of tracks
+        (ticksPerBeat >> 8) & 0xFF, ticksPerBeat & 0xFF
+      ];
+
+      const fileBytes = [...header];
+      tracks.forEach(trkBytes => {
+        const len = trkBytes.length;
+        fileBytes.push(
+          0x4D, 0x54, 0x72, 0x6B, // 'MTrk'
+          (len >>> 24) & 0xFF,
+          (len >>> 16) & 0xFF,
+          (len >>> 8) & 0xFF,
+          len & 0xFF,
+          ...trkBytes
+        );
+      });
+
+      const blob = new Blob([new Uint8Array(fileBytes)], { type: 'audio/midi' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `schoenberg-modus-xii-P${state.primeRow[0]}-I${state.combinatorialIndex}.mid`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported Multi-Track Standard MIDI File (.mid)');
+    }
+
+    function writeVarLen(value) {
+      let buffer = value & 0x7F;
+      const bytes = [];
+      while ((value >>= 7)) {
+        buffer <<= 8;
+        buffer |= ((value & 0x7F) | 0x80);
+      }
+      while (true) {
+        bytes.push(buffer & 0xFF);
+        if (buffer & 0x80) buffer >>= 8;
+        else break;
+      }
+      return bytes;
+    }
+
+    function copyScoreJsonToClipboard() {
+      const payload = {
+        generator: 'MODUS XII — Schoenberg Mature Practice Engine',
+        primeRow: state.primeRow,
+        combinatorialPartnerRow: state.combinatorialPartnerRow,
+        hexachordIntervalVector: computeIntervalVector(state.primeRow.slice(0, 6)),
+        tempo: state.tempo,
+        metreMode: state.metreMode,
+        sections: state.sections,
+        totalAggregates: state.aggregates.length,
+        noteEventsCount: state.scoreEvents.length,
+        events: state.scoreEvents.slice(0, 48) // Sample first 48 analytical note events
+      };
+      const text = JSON.stringify(payload, null, 2);
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('Analytical Score JSON state copied to clipboard!');
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const label = document.getElementById('toastMessage');
+      label.textContent = msg;
+      banner.classList.remove('hidden');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3200);
+    }
+
+    /***************************************************************************
+     * 8. MASTER REFRESH & EVENT LISTENERS
+     ***************************************************************************/
+
+    function refreshAllStudioViews() {
+      generateSchoenbergPiece();
+      renderWorkbench();
+      state.selectedMatrixForm = { type: 'I', index: state.combinatorialIndex };
+      renderMatrix();
+      renderFormalSections();
+      updateLiveTelemetryForBeat(state.currentBeat);
+      drawScoreCanvas();
+    }
+
+    // Bind Controls
+    document.getElementById('btnPlay').addEventListener('click', togglePlayback);
+    document.getElementById('btnStop').addEventListener('click', stopPlayback);
+
+    document.getElementById('btnLoop').addEventListener('click', (e) => {
+      state.loop = !state.loop;
+      e.currentTarget.className = state.loop
+        ? 'px-2.5 py-1.5 rounded-md text-amber-400 bg-amber-500/10 border border-amber-500/30 text-xs font-mono transition'
+        : 'px-2.5 py-1.5 rounded-md text-slate-500 bg-obsidian-900 border border-slate-800 text-xs font-mono transition';
+    });
+
+    document.getElementById('btnRegenerate').addEventListener('click', () => {
+      state.triggeredEventIds.clear();
+      refreshAllStudioViews();
+      showToast('Synthesized new chamber realization from active Hexachordal Levels');
+    });
+
+    document.getElementById('sliderTempo').addEventListener('input', (e) => {
+      state.tempo = parseInt(e.target.value, 10);
+      document.getElementById('valTempo').textContent = state.tempo;
+    });
+
+    document.getElementById('selectTimbre').addEventListener('change', (e) => {
+      state.timbre = e.target.value;
+      showToast(`Ensemble timbre switched to ${e.target.options[e.target.selectedIndex].text}`);
+    });
+
+    document.getElementById('selectPreset').addEventListener('change', (e) => {
+      const preset = ROW_PRESETS[e.target.value];
+      if (preset) {
+        state.primeRow = [...preset.row];
+        state.customHexSelection = [];
+        refreshAllStudioViews();
+        showToast(`Loaded ${preset.name}`);
+      }
+    });
+
+    document.getElementById('btnRandomCombinatorial').addEventListener('click', () => {
+      state.primeRow = generateCombinatorialRow();
+      state.customHexSelection = [];
+      refreshAllStudioViews();
+      showToast('Generated new 6+6 Hexachordally Combinatorial 12-Tone Row!');
+    });
+
+    document.getElementById('btnResetBuilder').addEventListener('click', () => {
+      state.customHexSelection = [];
+      renderCustomKeyboard();
+    });
+
+    document.getElementById('btnAuditionPrime').addEventListener('click', () => {
+      auditionRowSequence(state.primeRow, 'H', `P${state.primeRow[0]}`);
+    });
+
+    document.getElementById('btnAuditionInv').addEventListener('click', () => {
+      auditionRowSequence(state.combinatorialPartnerRow, 'N', `I${state.combinatorialIndex}`);
+    });
+
+    document.getElementById('btnModeNote').addEventListener('click', () => {
+      state.matrixNotation = 'note';
+      document.getElementById('btnModeNote').className = 'px-2 py-1 rounded text-[10px] font-mono bg-amber-500 text-obsidian-950 font-semibold transition';
+      document.getElementById('btnModeInt').className = 'px-2 py-1 rounded text-[10px] font-mono text-slate-400 hover:text-white transition';
+      renderWorkbench();
+      renderMatrix();
+      updateLiveTelemetryForBeat(state.currentBeat);
+      drawScoreCanvas();
+    });
+
+    document.getElementById('btnModeInt').addEventListener('click', () => {
+      state.matrixNotation = 'int';
+      document.getElementById('btnModeInt').className = 'px-2 py-1 rounded text-[10px] font-mono bg-amber-500 text-obsidian-950 font-semibold transition';
+      document.getElementById('btnModeNote').className = 'px-2 py-1 rounded text-[10px] font-mono text-slate-400 hover:text-white transition';
+      renderWorkbench();
+      renderMatrix();
+      updateLiveTelemetryForBeat(state.currentBeat);
+      drawScoreCanvas();
+    });
+
+    document.getElementById('selectMetreMode').addEventListener('change', (e) => {
+      state.metreMode = e.target.value;
+      refreshAllStudioViews();
+    });
+
+    document.getElementById('chkFreezeInvariants').addEventListener('change', (e) => {
+      state.freezeInvariants = e.target.checked;
+      refreshAllStudioViews();
+    });
+
+    document.getElementById('btnExportMidi').addEventListener('click', exportStandardMidiFile);
+    document.getElementById('btnCopyJson').addEventListener('click', copyScoreJsonToClipboard);
+
+    window.addEventListener('resize', resizeScoreCanvas);
+
+    // Initialize Studio on Window Load
+    window.onload = function () {
+      refreshAllStudioViews();
+      resizeScoreCanvas();
+    };
+  </script>
+</body>
+</html>
